@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <title>夢色蛋糕師</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #FFC8CD;
+            font-family: 'Comic Sans MS', cursive;
+            overflow: hidden;
+        }
+
+        .page {
+            display: none;
+            width: 100vw;
+            height: 100vh;
+            position: absolute;
+            top: 0;
+            left: 0;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            transition: opacity 1s ease;
+        }
+
+        .page.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .fade-out {
+            opacity: 0 !important;
+        }
+
+        .button {
+            margin-top: 20px;
+            padding: 10px 60px;
+            background-color: #ff6b81;
+            color: white;
+            border: 4px solid #71321C;
+            border-radius: 24px;
+            font-size: 20px;
+            cursor: pointer;
+            transition: transform 0.3s ease, background-color 0.3s ease;
+        }
+
+        .button:hover {
+            transform: scale(1.1);
+            background-color: #ff3b61;
+        }
+
+        .cake-option {
+            margin: 10px;
+            cursor: pointer;
+            width: 150px;
+            transition: transform 0.3s ease;
+        }
+
+        .cake-option:hover {
+            transform: scale(1.1);
+        }
+
+        .cake {
+            position: relative;
+            display: inline-block;
+        }
+
+        .decoration {
+            position: absolute;
+            transform: translate(-50%, -50%) scale(0);
+            animation: popIn 0.5s forwards;
+            pointer-events: none;
+        }
+
+        @keyframes popIn {
+            0% {
+                transform: translate(-50%, -50%) scale(0);
+                opacity: 0;
+            }
+            50% {
+                transform: translate(-50%, -50%) scale(1.2);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="page1" class="page active">
+        <img src="image/KV.png" style="max-width: 80%; height: auto;">
+        <button class="button" onclick="goToPage(2)">☆ start ☆</button>
+    </div>
+
+    <div id="page2" class="page">
+        <img src="image/step1.png" style="width: 300px;">
+        <div style="display: flex;">
+            <img src="image/heart.png" class="cake-option" onclick="selectCake('image/heart.png')">
+            <img src="image/circle.png" class="cake-option" onclick="selectCake('image/circle.png')">
+            <img src="image/circle2.png" class="cake-option" onclick="selectCake('image/circle2.png')">
+        </div>
+    </div>
+
+    <div id="page3" class="page">
+        <img src="image/step1.png" style="width: 300px;">
+        <div class="cake">
+            <img id="selectedCake1" src="" style="width: 300px;">
+        </div>
+        <button class="button" onclick="goToPage(4)">☆ 下一步 ☆</button>
+    </div>
+
+    <div id="page4" class="page" onclick="addCream(event)">
+        <img src="image/step2.png" style="width: 300px;">
+        <div class="cake" id="cakeStep2">
+            <img id="selectedCake2" src="" style="width: 300px;">
+        </div>
+        <button class="button" onclick="goToPage(5)">☆ 下一步 ☆</button>
+    </div>
+
+    <div id="page5" class="page" onclick="addCherry(event)">
+        <img src="image/step3.png" style="width: 300px;">
+        <div class="cake" id="cakeStep3">
+            <img id="selectedCake3" src="" style="width: 300px;">
+        </div>
+        <button class="button" onclick="goToPage(6)">☆ 完成 ☆</button>
+    </div>
+
+    <div id="page6" class="page">
+        <img src="image/congrats.png" style="width: 300px;">
+        <div class="cake">
+            <img id="selectedCake4" src="" style="width: 300px;">
+            <div id="finalCreams"></div>
+            <div id="finalCherries"></div>
+        </div>
+        <button class="button" onclick="restartGame()">☆ 重新開始 ☆</button>
+    </div>
+
+    <script>
+        let currentPage = 1;
+        let selectedCake = '';
+        let creamPositions = [];
+        let cherryPositions = [];
+
+        function goToPage(pageNumber) {
+            document.getElementById(`page${currentPage}`).classList.remove('active');
+            document.getElementById(`page${currentPage}`).classList.add('fade-out');
+
+            setTimeout(() => {
+                document.getElementById(`page${currentPage}`).style.display = 'none';
+                document.getElementById(`page${currentPage}`).classList.remove('fade-out');
+
+                currentPage = pageNumber;
+                document.getElementById(`page${currentPage}`).style.display = 'flex';
+                setTimeout(() => {
+                    document.getElementById(`page${currentPage}`).classList.add('active');
+                }, 10);
+
+                if (currentPage === 3) {
+                    document.getElementById('selectedCake1').src = selectedCake;
+                }
+                if (currentPage === 4) {
+                    document.getElementById('selectedCake2').src = selectedCake;
+                }
+                if (currentPage === 5) {
+                    document.getElementById('selectedCake3').src = selectedCake;
+                    renderCreams();
+                }
+                if (currentPage === 6) {
+                    document.getElementById('selectedCake4').src = selectedCake;
+                    renderFinalDecorations();
+                }
+
+            }, 600);
+        }
+
+        function selectCake(src) {
+            selectedCake = src;
+            goToPage(3);
+        }
+
+        function addCream(event) {
+            if (event.target.id !== 'selectedCake2') return;
+
+            const rect = event.target.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const y = event.clientY - rect.top;
+
+            creamPositions.push({x, y});
+
+            const img = document.createElement('img');
+            img.src = 'image/cream.png';
+            img.className = 'decoration';
+            img.style.left = `${x}px`;
+            img.style.top = `${y}px`;
+            img.style.width = '60px';
+            img.style.height = '60px';
+            document.getElementById('cakeStep2').appendChild(img);
+        }
+
+        function addCherry(event) {
+            if (event.target.id !== 'selectedCake3') return;
+
+            const rect = event.target.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const y = event.clientY - rect.top;
+
+            cherryPositions.push({x, y});
+
+            const img = document.createElement('img');
+            img.src = 'image/cherry.png';
+            img.className = 'decoration';
+            img.style.left = `${x}px`;
+            img.style.top = `${y}px`;
+            img.style.width = '80px';
+            img.style.height = '80px';
+            document.getElementById('cakeStep3').appendChild(img);
+        }
+
+        function renderCreams() {
+            document.getElementById('cakeStep3').innerHTML = `<img id="selectedCake3" src="${selectedCake}" style="width: 300px;">`;
+            for (let pos of creamPositions) {
+                const img = document.createElement('img');
+                img.src = 'image/cream.png';
+                img.className = 'decoration';
+                img.style.left = `${pos.x}px`;
+                img.style.top = `${pos.y}px`;
+                img.style.width = '60px';
+                img.style.height = '60px';
+                document.getElementById('cakeStep3').appendChild(img);
+            }
+        }
+
+        function renderFinalDecorations() {
+            const creamContainer = document.getElementById('finalCreams');
+            const cherryContainer = document.getElementById('finalCherries');
+            creamContainer.innerHTML = '';
+            cherryContainer.innerHTML = '';
+
+            for (let pos of creamPositions) {
+                const img = document.createElement('img');
+                img.src = 'image/cream.png';
+                img.className = 'decoration';
+                img.style.left = `${pos.x}px`;
+                img.style.top = `${pos.y}px`;
+                img.style.width = '60px';
+                img.style.height = '60px';
+                creamContainer.appendChild(img);
+            }
+
+            for (let pos of cherryPositions) {
+                const img = document.createElement('img');
+                img.src = 'image/cherry.png';
+                img.className = 'decoration';
+                img.style.left = `${pos.x}px`;
+                img.style.top = `${pos.y}px`;
+                img.style.width = '80px';
+                img.style.height = '80px';
+                cherryContainer.appendChild(img);
+            }
+        }
+
+        function restartGame() {
+            selectedCake = '';
+            creamPositions = [];
+            cherryPositions = [];
+            goToPage(1);
+        }
+    </script>
+</body>
+</html>
